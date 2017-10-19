@@ -1,0 +1,162 @@
+<html>
+    <head>
+        <style>
+            canvas {display: block; margin: 0 auto; }
+        </style>
+    </head>
+    <body>
+        <canvas id="myCanvas" width="1000" height="800"></canvas>
+    </body>
+    <script>
+        var canvas = document.getElementById("myCanvas");
+        var context = canvas.getContext("2d");
+
+        var wool = {color: "lightgreen"}
+        var lumber = {color: "darkgreen"}
+        var wheat = {color: "yellow"}
+        var brick = {color: "red"}
+        var ore = {color: "grey"}
+        var desert = {color: "brown"}
+        var water = {color: "lightblue"}
+
+        function clearCanvas( context, canvas ) {
+            context.clearRect( 0, 0, canvas.width, canvas.height );
+        }
+
+        function drawPolygon(cxt, x, y, sides, size, color, rotation) {
+            cxt.beginPath();
+
+            cxt.moveTo (x +  size * Math.sin(rotation), y +  size *  Math.cos(rotation));          
+
+            for (var i = 1; i <= sides;i += 1) {
+                cxt.lineTo (x + size * Math.sin(i * 2 * Math.PI / sides + rotation), y + size * Math.cos(i * 2 * Math.PI / sides + rotation));
+            }
+
+            cxt.strokeStyle = "black";
+            cxt.lineWidth = 10;
+            cxt.fillStyle = color;
+            cxt.fill();
+            cxt.stroke();
+            cxt.closePath();
+        }
+
+        function drawNumber(ctx, x, y, size, number) {
+            ctx.beginPath();
+            ctx.arc(x, y, size, 0, Math.PI * 2);
+            ctx.fillStyle = "white";
+            ctx.strokeStyle = "black";
+            ctx.lineWidth = 4;
+            ctx.fill();
+
+            text = number.toString();
+            ctx.fillStyle = "black";
+            ctx.font = "30px Arial";
+
+            width = ctx.measureText(text).width;
+            height = ctx.measureText("w").width;
+
+            ctx.fillText(number.toString(), x-width/2, y+height/2);
+
+            ctx.stroke();
+            ctx.closePath();
+        }
+
+        var size = 60;
+        var startX = 300;
+        var startY = 100;
+        var sqrt_3 = Math.sqrt(3);
+
+        function drawLevel(x, y, size, count, numbers, resources) {
+            for (i = 0; i < count; i++) {
+                drawPolygon(context, x + i * Math.ceil(size * sqrt_3), y, 6, size, resources[i].color, 0);
+                
+                if (numbers != null && numbers[i] != null)
+                    drawNumber(context, x + i * Math.ceil(size * sqrt_3), y, size/3, numbers[i]);  
+            }
+        }
+
+        function drawMap(map) {
+            levels = map.length;
+            dx = -1 * Math.ceil(sqrt_3 * size)/2;
+            dy = 1.5 * size;
+
+            for (var i=0; i < levels ; i++) {
+                var p = i;
+
+                if (i >= levels/2) {
+                    p = levels - i - 1;
+                }
+
+                drawLevel(startX + p * dx, startY + i * dy, size, map[i].numbers.length, map[i].numbers,
+                map[i].resources);
+            }
+        }
+
+        function shuffleArray (array){
+            for (var i = array.length - 1; i > 0; i--) {
+                var rand = Math.floor(Math.random() * (i + 1));
+                [array[i], array[rand]]=[array[rand], array[i]];
+            }
+        }
+
+        function generateRandomMap() {
+            numbers = [2,3,3,4,4,5,5,6,6,8,8,9,9,10,10,11,11,12];
+            resources = [wheat, wheat, wheat, wheat, ore, ore, ore, lumber, lumber, lumber, lumber,
+                            wool, wool, wool, wool, brick, brick, brick];
+            ports = ["W", "L", "?", "?", "?", "?", "O", "B", "H"];
+                            
+            levels = [4,5,6,7,6,5,4];
+            desert_position = Math.random() * 19;
+            
+            shuffleArray(numbers);
+            shuffleArray(resources);
+            shuffleArray(ports);
+
+            numbers.splice(desert_position, 0, 7);
+            resources.splice(desert_position, 0, desert);
+
+            // add water to the map
+            resources.splice(0,0, water, water, water, water, water);
+            resources.splice(8,0,water, water);
+            resources.splice(14, 0, water, water);
+            resources.splice(21, 0, water, water);
+            resources.splice(27, 0, water, water);
+            resources.splice(32, 0, water, water, water, water, water);
+
+            console.log(resources);
+
+            numbers.splice(0,0, ports[0], null, ports[1], null, null);
+            numbers.splice(8,0,ports[2], ports[3]);
+            numbers.splice(14, 0, null, null);
+            numbers.splice(21, 0, ports[4], ports[5]);
+            numbers.splice(27, 0, null, null);
+            numbers.splice(32, 0, ports[6], ports[7], null, ports[8], null);
+
+            map = [];
+            counter = 0;
+            for (var i=0; i<levels.length; i++) {
+                level_numbers = [];
+                level_resources = [];
+
+                for (var j=counter; j<counter + levels[i]; j++) {
+                    level_numbers.push(numbers[j]);
+                    level_resources.push(resources[j]);
+                }
+
+                map.push({numbers: level_numbers, resources: level_resources});
+                counter = counter + levels[i];
+            }
+
+            return map;
+        }
+
+        function drawRandomMap() {
+            map = generateRandomMap();
+
+            console.log(map);
+            drawMap(map);
+        }
+
+        drawRandomMap();
+    </script>
+</html>
